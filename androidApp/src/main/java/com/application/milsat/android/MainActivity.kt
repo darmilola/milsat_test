@@ -45,8 +45,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
+import kotlin.random.Random
 
 
 class MainActivity : ComponentActivity() {
@@ -62,16 +64,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            var isGovernmentTypeVisible = false
-
-            var buuildingName = remember { mutableStateOf("") }
+            var buildingName = remember { mutableStateOf("") }
             var address = remember { mutableStateOf( "") }
             var ownership = remember { mutableStateOf( "") }
             var status = remember { mutableStateOf( "") }
             var ownerFullname = remember { mutableStateOf( "") }
             var ownerPhone = remember { mutableStateOf( "") }
             var uses = remember { mutableStateOf( "") }
-
             var isGovernmentOwnership = remember { mutableStateOf(false) }
             var governmentType = remember { mutableStateOf( "") }
 
@@ -130,10 +129,16 @@ class MainActivity : ComponentActivity() {
                                         this@MainActivity,
                                         arrayOf<String>(READ_EXTERNAL_STORAGE), 0
                                     )
+                                    val index = Random(1000).nextInt()
+                                    val filename = "data$index.csv"
                                     val folder =
                                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                                    val file = File(folder, "data.csv")
-                                    csvWriter().writeAll(listOf(formList), file.outputStream())
+                                   try {
+                                       val file = File(folder, filename)
+                                       csvWriter().writeAll(listOf(formList), file.outputStream())
+                                   }catch (e : FileNotFoundException){
+
+                                   }
 
                                     Toast.makeText(
                                         this@MainActivity,
@@ -181,7 +186,7 @@ class MainActivity : ComponentActivity() {
                                                 text = "Building Name",
                                                 fontSize = 20
                                             )
-                                            TextFieldComponent(text = buuildingName.value,
+                                            TextFieldComponent(text = buildingName.value,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(50.dp)
@@ -189,7 +194,7 @@ class MainActivity : ComponentActivity() {
                                                     .width(200.dp),
                                                 onValueChange = {
                                                     if (it!!.length < it2.maxLength) {
-                                                        buuildingName.value = it
+                                                        buildingName.value = it
                                                     }
                                                 })
                                         }
@@ -283,7 +288,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 if (isGovernmentOwnership.value && it2.columnName == "OWNER") {
-                                      isGovernmentTypeVisible = true
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             TextComponent(
                                                 text = "Government Type",
@@ -387,7 +391,8 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth(),
                             buttonText = "Save"
                         ) {
-                            if (buuildingName.value.isEmpty()) {
+
+                            if (buildingName.value.isEmpty()) {
                                 Toast.makeText(
                                     this@MainActivity,
                                     "Name of Building is Required",
@@ -395,10 +400,21 @@ class MainActivity : ComponentActivity() {
                                 ).show()
                             }
                             else{
-                                val form = Form(buildingName = buuildingName.value, address = address.value, owner = ownerFullname.value,
+                                val form = Form(buildingName = buildingName.value, address = address.value, owner = ownerFullname.value,
                                     buildingStatus = status.value, ownersPhone = ownerPhone.value, ownersFullName = ownerFullname.value, buildingUses = uses.value)
                                 val formDao = db.formDao()
                                 formDao.insertAll(form)
+
+                                buildingName.value = ""
+                                address.value = ""
+                                ownership.value = ""
+                                status.value = ""
+                                ownerFullname.value = ""
+                                ownerPhone.value = ""
+                                uses.value = ""
+                                isGovernmentOwnership.value = false
+                                governmentType.value = ""
+
                                 Toast.makeText(
                                     this@MainActivity,
                                     "Saved Successfully",
