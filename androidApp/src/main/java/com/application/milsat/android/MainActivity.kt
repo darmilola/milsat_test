@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,7 @@ import androidx.core.app.ActivityCompat
 import androidx.room.Room
 import com.application.milsat.android.Enum.UI_TYPE
 import com.application.milsat.android.Model.FieldComponent
+import com.application.milsat.android.Model.GovernmentTypeComponent
 import com.application.milsat.android.Room.AppDatabase
 import com.application.milsat.android.Room.Form
 import com.application.milsat.android.widgets.ButtonComponent
@@ -59,6 +62,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            var isGovernmentTypeVisible = false
+
             var buuildingName = remember { mutableStateOf("") }
             var address = remember { mutableStateOf( "") }
             var ownership = remember { mutableStateOf( "") }
@@ -66,6 +71,9 @@ class MainActivity : ComponentActivity() {
             var ownerFullname = remember { mutableStateOf( "") }
             var ownerPhone = remember { mutableStateOf( "") }
             var uses = remember { mutableStateOf( "") }
+
+            var isGovernmentOwnership = remember { mutableStateOf(false) }
+            var governmentType = remember { mutableStateOf( "") }
 
 
             MyApplicationTheme {
@@ -76,8 +84,15 @@ class MainActivity : ComponentActivity() {
 
                     val uiList: MutableList<FieldComponent> = mutableListOf<FieldComponent>()
 
-                    val jsonString = getJsonFile()
-                    val formFields = getFieldsFromFile(jsonString!!)
+                    val formJsonString = getJsonFile()
+                    val governmentTypeJsonString = getGovernmentTypeJsonFile()
+
+
+                    val formFields = getFieldsFromFile(formJsonString!!)
+                    val gvtFields = getGVTTypeFieldsFromFile(governmentTypeJsonString!!)
+
+                    val governmentTypeUI = getGovernmentType(gvtFields)
+
                     uiList.add(getNameOfBuilding(formFields))
                     uiList.add(getAddressOfBuilding(formFields))
                     uiList.add(buildingOwnership(formFields))
@@ -87,26 +102,34 @@ class MainActivity : ComponentActivity() {
                     uiList.add(buildingUses(formFields))
 
 
-                    Column(modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.50f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(state = rememberScrollState())
+                            .height(1500.dp)
+                            .fillMaxWidth(0.50f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
 
 
-                        Row(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
 
-                            Box(modifier = Modifier
-                                .weight(1f)
-                                .padding(20.dp)
-                                .height(70.dp), contentAlignment = Alignment.CenterStart) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(20.dp)
+                                    .height(70.dp), contentAlignment = Alignment.CenterStart
+                            ) {
                                 ButtonComponent(
                                     modifier = Modifier.fillMaxWidth(0.40f),
                                     buttonText = "Export to CSV"
                                 ) {
                                     val formDao = db.formDao()
-                                    val formList =  formDao.getAll()
+                                    val formList = formDao.getAll()
                                     ActivityCompat.requestPermissions(
                                         this@MainActivity,
-                                        arrayOf<String>(READ_EXTERNAL_STORAGE), 0)
+                                        arrayOf<String>(READ_EXTERNAL_STORAGE), 0
+                                    )
                                     val folder =
                                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                                     val file = File(folder, "data.csv")
@@ -121,10 +144,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            Box(modifier = Modifier
-                                .weight(1f)
-                                .padding(20.dp)
-                                .height(70.dp), contentAlignment = Alignment.CenterEnd) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(20.dp)
+                                    .height(70.dp), contentAlignment = Alignment.CenterEnd
+                            ) {
                                 ButtonComponent(
                                     modifier = Modifier.fillMaxWidth(0.40f),
                                     buttonText = "Sync to Cloud"
@@ -136,24 +161,26 @@ class MainActivity : ComponentActivity() {
 
 
 
-
                         uiList.forEach { it2 ->
-                            if (it2.uiType == UI_TYPE.TEXT_FIELD.toPath()){
-                                Box(modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        shape = RoundedCornerShape(10.dp),
-                                        color = Color.Black
-                                    )
-                                    .height(90.dp), contentAlignment = Alignment.Center) {
+                            if (it2.uiType == UI_TYPE.TEXT_FIELD.toPath()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp)
+                                        .border(
+                                            width = 1.dp,
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = Color.Black
+                                        )
+                                        .height(90.dp), contentAlignment = Alignment.TopCenter
+                                ) {
 
                                     if (it2.columnName == "NAME_BLD") {
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             TextComponent(
                                                 text = "Building Name",
-                                                fontSize = 20)
+                                                fontSize = 20
+                                            )
                                             TextFieldComponent(text = buuildingName.value,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -166,9 +193,7 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 })
                                         }
-                                    }
-
-                                   else if (it2.columnName == "ADDRESS") {
+                                    } else if (it2.columnName == "ADDRESS") {
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             TextComponent(
                                                 text = "Address",
@@ -186,8 +211,7 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 })
                                         }
-                                    }
-                                    else if (it2.columnName == "NAM_OWN") {
+                                    } else if (it2.columnName == "NAM_OWN") {
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             TextComponent(
                                                 text = "Owner Name",
@@ -204,8 +228,7 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 })
                                         }
-                                    }
-                                    else if (it2.columnName == "NUM_OWN") {
+                                    } else if (it2.columnName == "NUM_OWN") {
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             TextComponent(
                                                 text = "Owner Phone",
@@ -223,47 +246,94 @@ class MainActivity : ComponentActivity() {
                                                 })
                                         }
                                     }
-
                                 }
-                            }
-                            else if (it2.uiType == UI_TYPE.DROP_DOWN.toPath()){
-                             if (it2.columnName == "OWNER") {
-                                 Column(modifier = Modifier.padding(start = 20.dp)) {
-                                     TextComponent(text = "Building Ownership", fontSize = 20)
-                                     Box(
-                                         modifier = Modifier
-                                             .fillMaxWidth()
-                                             .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
-                                             .border(
-                                                 width = 1.dp,
-                                                 shape = RoundedCornerShape(10.dp),
-                                                 color = Color.Black
-                                             )
-                                             .height(70.dp), contentAlignment = Alignment.Center
-                                     ) {
-                                         DropDownWidget(
-                                             menuItems = it2.dropDownValues,
-                                             placeHolderText = ownership.value,
-                                             onMenuItemClick = {
-                                                 ownership.value = it2.dropDownValues[it]
-                                             }
-                                         )
-                                     }
-                                 }
-                             }
+                            } else if (it2.uiType == UI_TYPE.DROP_DOWN.toPath()) {
+                                if (it2.columnName == "OWNER") {
+                                    Column(modifier = Modifier.padding(start = 20.dp)) {
+                                        TextComponent(
+                                            text = "Building Ownership",
+                                            fontSize = 20
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(
+                                                    end = 20.dp,
+                                                    top = 20.dp,
+                                                    bottom = 20.dp
+                                                )
+                                                .border(
+                                                    width = 1.dp,
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = Color.Black
+                                                )
+                                                .height(70.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            DropDownWidget(
+                                                menuItems = it2.dropDownValues,
+                                                placeHolderText = ownership.value,
+                                                onMenuItemClick = {
+                                                    ownership.value = it2.dropDownValues[it]
+                                                    isGovernmentOwnership.value = ownership.value == "GOVERNMENT"
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (isGovernmentOwnership.value && it2.columnName == "OWNER") {
+                                      isGovernmentTypeVisible = true
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            TextComponent(
+                                                text = "Government Type",
+                                                fontSize = 20
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        end = 20.dp,
+                                                        top = 20.dp,
+                                                        bottom = 20.dp
+                                                    )
+                                                    .border(
+                                                        width = 1.dp,
+                                                        shape = RoundedCornerShape(10.dp),
+                                                        color = Color.Black
+                                                    )
+                                                    .height(if (isGovernmentOwnership.value) 70.dp else 0.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                DropDownWidget(
+                                                    menuItems = governmentTypeUI.dropDownValues,
+                                                    placeHolderText = governmentType.value,
+                                                    onMenuItemClick = {
+                                                        governmentType.value = governmentTypeUI.dropDownValues[it]
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
                                 if (it2.columnName == "BLD_STAT") {
                                     Column(modifier = Modifier.padding(start = 20.dp)) {
                                         TextComponent(text = "Building Status", fontSize = 20)
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
+                                                .padding(
+                                                    end = 20.dp,
+                                                    top = 20.dp,
+                                                    bottom = 20.dp
+                                                )
                                                 .border(
                                                     width = 1.dp,
                                                     shape = RoundedCornerShape(10.dp),
                                                     color = Color.Black
                                                 )
-                                                .height(70.dp), contentAlignment = Alignment.Center
+                                                .height(70.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             DropDownWidget(
                                                 menuItems = it2.dropDownValues,
@@ -281,13 +351,18 @@ class MainActivity : ComponentActivity() {
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
+                                                .padding(
+                                                    end = 20.dp,
+                                                    top = 20.dp,
+                                                    bottom = 20.dp
+                                                )
                                                 .border(
                                                     width = 1.dp,
                                                     shape = RoundedCornerShape(10.dp),
                                                     color = Color.Black
                                                 )
-                                                .height(70.dp), contentAlignment = Alignment.Center
+                                                .height(70.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
                                             DropDownWidget(
                                                 menuItems = it2.dropDownValues,
@@ -302,36 +377,36 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                    }
 
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                            .height(70.dp), contentAlignment = Alignment.Center) {
-                            ButtonComponent(
-                                modifier = Modifier.fillMaxWidth(),
-                                buttonText = "Save"
-                            ) {
-                                if (buuildingName.value.isEmpty()) {
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        "Name of Building is Required",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                else{
-                                    val form = Form(buildingName = buuildingName.value, address = address.value, owner = ownerFullname.value,
-                                        buildingStatus = status.value, ownersPhone = ownerPhone.value, ownersFullName = ownerFullname.value, buildingUses = uses.value)
-                                        val formDao = db.formDao()
-                                        formDao.insertAll(form)
-                                    Toast.makeText(
-                                        this@MainActivity,
-                                        "Saved Successfully",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
-                                }
+                    Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                        .height(70.dp), contentAlignment = Alignment.BottomCenter) {
+                        ButtonComponent(
+                            modifier = Modifier.fillMaxWidth(),
+                            buttonText = "Save"
+                        ) {
+                            if (buuildingName.value.isEmpty()) {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Name of Building is Required",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            else{
+                                val form = Form(buildingName = buuildingName.value, address = address.value, owner = ownerFullname.value,
+                                    buildingStatus = status.value, ownersPhone = ownerPhone.value, ownersFullName = ownerFullname.value, buildingUses = uses.value)
+                                val formDao = db.formDao()
+                                formDao.insertAll(form)
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Saved Successfully",
+                                    Toast.LENGTH_LONG
+                                ).show()
 
                             }
+
                         }
 
                     }
@@ -351,11 +426,28 @@ class MainActivity : ComponentActivity() {
         return buildingMapping2["fields"] as JsonObject
     }
 
+    private fun getGVTTypeFieldsFromFile(jsonString: String): JsonObject {
+        val rootObject = Json.parseToJsonElement(jsonString) as JsonObject
+        val forms = rootObject["forms"] as JsonObject
+        val buildingMapping = forms["BUILDING_MAPPING"] as JsonObject
+        val pages = buildingMapping["pages"] as JsonObject
+        val buildingMapping2 = pages["BUILDING_MAPPING"] as JsonObject
+
+        return buildingMapping2["fields"] as JsonObject
+    }
+
 
     private fun getNameOfBuilding(jsonObject: JsonObject): FieldComponent {
         return Json.decodeFromJsonElement(
             (FieldComponent.serializer()),
             jsonObject["NAME OF BUILDING"]!!
+        )
+    }
+
+    private fun getGovernmentType(jsonObject: JsonObject): GovernmentTypeComponent {
+        return Json.decodeFromJsonElement(
+            (GovernmentTypeComponent.serializer()),
+            jsonObject["GOVERNMENT TYPE"]!!
         )
     }
 
@@ -404,6 +496,19 @@ class MainActivity : ComponentActivity() {
     @Throws(IOException::class)
     fun getJsonFile(): String? {
         val jsonFile = assets.open("building_mapping.json")
+        val bufferedReader = BufferedReader(InputStreamReader(jsonFile))
+        val stringBuilder = StringBuilder()
+        bufferedReader.useLines { lines ->
+            lines.forEach {
+                stringBuilder.append(it)
+            }
+        }
+        return stringBuilder.toString()!!
+    }
+
+    @Throws(IOException::class)
+    fun getGovernmentTypeJsonFile(): String? {
+        val jsonFile = assets.open("building_ownership.json")
         val bufferedReader = BufferedReader(InputStreamReader(jsonFile))
         val stringBuilder = StringBuilder()
         bufferedReader.useLines { lines ->

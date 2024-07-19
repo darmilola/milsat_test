@@ -1,0 +1,25 @@
+{
+  "forms": {
+    "BUILDING_MAPPING": {
+      "pages": {
+        "BUILDING_MAPPING": {
+          "fields": { 
+                "GOVERNMENT TYPE": {
+                    "ui_type": "drop_down",
+                    "column_type": "TEXT",
+                    "column_name": "GVT_TYPE",
+                    "required": false,
+                    "values": [
+                    "SELECT OPTION",
+                    "FEDERAL",
+                    "STATE",
+                    "LOCAL"
+                    ]
+                }
+             }
+          }
+        }
+      }
+    }
+}
+

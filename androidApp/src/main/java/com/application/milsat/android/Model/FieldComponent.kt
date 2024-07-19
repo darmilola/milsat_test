@@ -17,3 +17,12 @@ data class FieldComponent(@SerialName("ui_type") val uiType: String = UI_TYPE.TE
                               @SerialName("min_length") val minLength: Int = 0,
                               @SerialName("max_length") val maxLength: Int = 0,
                               @SerialName("values") val dropDownValues: ArrayList<String> = arrayListOf())
+
+@Serializable
+data class GovernmentTypeComponent(@SerialName("ui_type") val uiType: String = UI_TYPE.TEXT_FIELD.toPath(),
+                          @SerialName("column_type") val columnType: String = COLUMN_TYPE.TEXT.toPath(),
+                          @SerialName("column_name") val columnName: String = "",
+                          @SerialName("required") val isRequired: Boolean = false,
+                          @SerialName("min_length") val minLength: Int = 0,
+                          @SerialName("max_length") val maxLength: Int = 0,
+                          @SerialName("values") val dropDownValues: ArrayList<String> = arrayListOf())
