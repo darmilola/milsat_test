@@ -47,23 +47,21 @@ import androidx.compose.ui.unit.sp
     }
 
 @Composable
-fun TextComponent(text: String, fontSize: Int, textStyle: TextStyle, textColor: Color, textAlign: TextAlign, fontWeight: FontWeight, fontFamily: FontFamily? = null, lineHeight: Int = 10, maxLines: Int = 10, overflow: TextOverflow = TextOverflow.Clip, letterSpacing: TextUnit = TextUnit.Unspecified) {
-    Text(text, fontSize = fontSize.sp, fontFamily = fontFamily, style = textStyle, color = textColor, textAlign = textAlign,fontWeight = fontWeight, lineHeight = lineHeight.sp, maxLines = maxLines, overflow = overflow, letterSpacing = letterSpacing)
+fun TextComponent(text: String, fontSize: Int) {
+    Text(text, fontSize = fontSize.sp)
 }
 
 @Composable
-fun SubtitleTextWidget(text: String, fontSize: Int = 18, textAlign: TextAlign = TextAlign.Left, textColor: Color = Color.Gray, modifier: Modifier = Modifier
+fun SubtitleTextWidget(text: String, fontSize: Int = 18, modifier: Modifier = Modifier
     .wrapContentWidth()
-    .wrapContentHeight(), textDecoration: TextDecoration? = null,) {
+    .wrapContentHeight()) {
     Column(
         modifier = modifier
             .padding(start = 3.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment  = Alignment.Start,
     ) {
-        TextComponent(
-            textStyle = MaterialTheme.typography.h6, textColor = textColor, textAlign = textAlign,
-            fontWeight = FontWeight.Normal, lineHeight = 30, maxLines = 3,  overflow = TextOverflow.Ellipsis)
+        TextComponent(text, fontSize)
     }
 
 }

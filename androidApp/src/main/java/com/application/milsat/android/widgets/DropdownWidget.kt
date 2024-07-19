@@ -58,36 +58,34 @@ fun DropDownWidgetView(menuItems: List<String>,
             modifier = Modifier.fillMaxWidth().fillMaxHeight()
         ) {
 
-            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f), contentAlignment = Alignment.Center){
+            Box(
+                modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f),
+                contentAlignment = Alignment.Center
+            ) {
 
                 TextComponent(
-                    text =  if(selectedIndex != -1) menuItems[selectedIndex] else placeHolderText,
-                    fontSize = if(selectedIndex != -1) 20 else 18,
-                    textStyle = TextStyle(),
-                    textColor = if(selectedIndex != -1)  Color.Yellow else  Color.Gray,
-                    textAlign = TextAlign.Start,
-                    fontWeight = FontWeight.SemiBold,
+                    text = if (selectedIndex != -1) menuItems[selectedIndex] else placeHolderText,
+                    fontSize = if (selectedIndex != -1) 20 else 18
+                )
             }
 
-
         }
-    }
-
-    DropdownMenu(
-        expanded = menuExpandedState,
-        onDismissRequest = { onDismissMenuView() },
-        modifier = Modifier
-            .fillMaxWidth(0.90f)
-            .background(Color.White)
-    ) {
-        menuItems.forEachIndexed { index, title ->
-            DropdownMenuItem(
-                onClick = {
-                    if (index != -1) {
-                        onMenuItemClick(index)
-                    }
-                }) {
-                SubtitleTextWidget(text = title, fontSize = 20)
+        DropdownMenu(
+            expanded = menuExpandedState,
+            onDismissRequest = { onDismissMenuView() },
+            modifier = Modifier
+                .fillMaxWidth(0.90f)
+                .background(Color.White)
+        ) {
+            menuItems.forEachIndexed { index, title ->
+                DropdownMenuItem(
+                    onClick = {
+                        if (index != -1) {
+                            onMenuItemClick(index)
+                        }
+                    }, text =  {
+                    SubtitleTextWidget(text = title, fontSize = 20)
+                })
             }
         }
     }
@@ -100,10 +98,8 @@ fun DropDownWidget(menuItems: List<String>, iconRes: String = "drawable/country_
     val selectedMenuIndex = remember { mutableStateOf(selectedIndex) }
 
     val modifier  = Modifier
-        .padding(end = 10.dp, start = 10.dp, top = 20.dp)
         .fillMaxWidth()
         .height(60.dp)
-        .border(border = BorderStroke(1.dp, color  = Color.Yellow), shape = RoundedCornerShape(15.dp))
         .background(color = Color.White, shape = RoundedCornerShape(15.dp))
 
     Column (

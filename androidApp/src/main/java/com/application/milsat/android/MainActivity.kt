@@ -3,13 +3,34 @@ package com.application.milsat.android
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.application.milsat.Greeting
+import com.application.milsat.android.Enum.UI_TYPE
 import com.application.milsat.android.Model.FieldComponent
+import com.application.milsat.android.widgets.ButtonComponent
+import com.application.milsat.android.widgets.DropDownWidget
+import com.application.milsat.android.widgets.TextComponent
+import com.application.milsat.android.widgets.TextFieldComponent
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.BufferedReader
@@ -21,11 +42,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+            var buuildingName = remember { mutableStateOf("") }
+            var address = remember { mutableStateOf( "") }
+            var ownership = remember { mutableStateOf( "") }
+            var status = remember { mutableStateOf( "") }
+            var ownerFullname = remember { mutableStateOf( "") }
+            var ownerPhone = remember { mutableStateOf( "") }
+            var uses = remember { mutableStateOf( "") }
+
+
             MyApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
                     val uiList: MutableList<FieldComponent> = mutableListOf<FieldComponent>()
 
                     val jsonString = getJsonFile()
@@ -35,11 +67,208 @@ class MainActivity : ComponentActivity() {
                     uiList.add(buildingOwnership(formFields))
                     uiList.add(buildingStatus(formFields))
                     uiList.add(ownerFullName(formFields))
+                    uiList.add(ownersPhone(formFields))
                     uiList.add(buildingUses(formFields))
-                    uiList.add(ownerFullName(formFields))
+
+
+                    Column(modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.50f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+
+
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .height(70.dp), contentAlignment = Alignment.CenterEnd) {
+                            ButtonComponent(
+                                modifier = Modifier.fillMaxWidth(0.20f),
+                                buttonText = "Sync to Cloud"
+                            ) {
+
+                            }
+                        }
 
 
 
+                        uiList.forEach { it2 ->
+                            if (it2.uiType == UI_TYPE.TEXT_FIELD.toPath()){
+                                Box(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp)
+                                    .border(
+                                        width = 1.dp,
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.Black
+                                    )
+                                    .height(90.dp), contentAlignment = Alignment.Center) {
+
+                                    if (it2.columnName == "NAME_BLD") {
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            TextComponent(
+                                                text = "Building Name",
+                                                fontSize = 20)
+                                            TextFieldComponent(text = buuildingName.value,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .padding(start = 20.dp)
+                                                    .width(200.dp),
+                                                onValueChange = {
+                                                    if (it!!.length < it2.maxLength) {
+                                                        buuildingName.value = it
+                                                    }
+                                                })
+                                        }
+                                    }
+
+                                   else if (it2.columnName == "ADDRESS") {
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            TextComponent(
+                                                text = "Address",
+                                                fontSize = 20
+                                            )
+                                            TextFieldComponent(text = address.value,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .padding(start = 20.dp)
+                                                    .width(200.dp),
+                                                onValueChange = {
+                                                    if (it!!.length < it2.maxLength) {
+                                                        address.value = it
+                                                    }
+                                                })
+                                        }
+                                    }
+                                    else if (it2.columnName == "NAM_OWN") {
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            TextComponent(
+                                                text = "Owner Name",
+                                                fontSize = 20
+                                            )
+                                            TextFieldComponent(text = ownerFullname.value,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .width(200.dp),
+                                                onValueChange = {
+                                                    if (it!!.length < it2.maxLength) {
+                                                        ownerFullname.value = it
+                                                    }
+                                                })
+                                        }
+                                    }
+                                    else if (it2.columnName == "NUM_OWN") {
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            TextComponent(
+                                                text = "Owner Phone",
+                                                fontSize = 20
+                                            )
+                                            TextFieldComponent(text = ownerPhone.value,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(50.dp)
+                                                    .width(200.dp),
+                                                onValueChange = {
+                                                    if (it!!.length < it2.maxLength) {
+                                                        ownerPhone.value = it
+                                                    }
+                                                })
+                                        }
+                                    }
+
+                                }
+                            }
+                            else if (it2.uiType == UI_TYPE.DROP_DOWN.toPath()){
+                             if (it2.columnName == "OWNER") {
+                                 Column(modifier = Modifier.padding(start = 20.dp)) {
+                                     TextComponent(text = "Building Ownership", fontSize = 20)
+                                     Box(
+                                         modifier = Modifier
+                                             .fillMaxWidth()
+                                             .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
+                                             .border(
+                                                 width = 1.dp,
+                                                 shape = RoundedCornerShape(10.dp),
+                                                 color = Color.Black
+                                             )
+                                             .height(70.dp), contentAlignment = Alignment.Center
+                                     ) {
+                                         DropDownWidget(
+                                             menuItems = it2.dropDownValues,
+                                             placeHolderText = ownership.value,
+                                             onMenuItemClick = {
+                                                 ownership.value = it2.dropDownValues[it]
+                                             }
+                                         )
+                                     }
+                                 }
+                             }
+                                if (it2.columnName == "BLD_STAT") {
+                                    Column(modifier = Modifier.padding(start = 20.dp)) {
+                                        TextComponent(text = "Building Status", fontSize = 20)
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
+                                                .border(
+                                                    width = 1.dp,
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = Color.Black
+                                                )
+                                                .height(70.dp), contentAlignment = Alignment.Center
+                                        ) {
+                                            DropDownWidget(
+                                                menuItems = it2.dropDownValues,
+                                                placeHolderText = status.value,
+                                                onMenuItemClick = {
+                                                    status.value = it2.dropDownValues[it]
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                if (it2.columnName == "BLD_USE") {
+                                    Column(modifier = Modifier.padding(start = 20.dp)) {
+                                        TextComponent(text = "Building Uses", fontSize = 20)
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(end = 20.dp, top = 20.dp, bottom = 20.dp)
+                                                .border(
+                                                    width = 1.dp,
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = Color.Black
+                                                )
+                                                .height(70.dp), contentAlignment = Alignment.Center
+                                        ) {
+                                            DropDownWidget(
+                                                menuItems = it2.dropDownValues,
+                                                placeHolderText = uses.value,
+                                                onMenuItemClick = {
+                                                    uses.value = it2.dropDownValues[it]
+                                                }
+                                            )
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .height(70.dp), contentAlignment = Alignment.Center) {
+                            ButtonComponent(
+                                modifier = Modifier.fillMaxWidth(),
+                                buttonText = "Save"
+                            ) {
+
+                            }
+                        }
+
+                    }
                 }
             }
 
