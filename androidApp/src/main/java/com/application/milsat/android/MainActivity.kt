@@ -1,13 +1,16 @@
 package com.application.milsat.android
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.os.Bundle
+import android.os.Environment
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,23 +27,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.application.milsat.Greeting
+import androidx.core.app.ActivityCompat
+import androidx.room.Room
 import com.application.milsat.android.Enum.UI_TYPE
 import com.application.milsat.android.Model.FieldComponent
+import com.application.milsat.android.Room.AppDatabase
+import com.application.milsat.android.Room.Form
 import com.application.milsat.android.widgets.ButtonComponent
 import com.application.milsat.android.widgets.DropDownWidget
 import com.application.milsat.android.widgets.TextComponent
 import com.application.milsat.android.widgets.TextFieldComponent
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.io.BufferedReader
+import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "form"
+        ).allowMainThreadQueries()
+            .build()
+
         setContent {
 
             var buuildingName = remember { mutableStateOf("") }
@@ -76,17 +92,48 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth(0.50f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
 
 
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                            .height(70.dp), contentAlignment = Alignment.CenterEnd) {
-                            ButtonComponent(
-                                modifier = Modifier.fillMaxWidth(0.20f),
-                                buttonText = "Sync to Cloud"
-                            ) {
+                        Row(modifier = Modifier.fillMaxWidth()) {
 
+                            Box(modifier = Modifier
+                                .weight(1f)
+                                .padding(20.dp)
+                                .height(70.dp), contentAlignment = Alignment.CenterStart) {
+                                ButtonComponent(
+                                    modifier = Modifier.fillMaxWidth(0.40f),
+                                    buttonText = "Export to CSV"
+                                ) {
+                                    val formDao = db.formDao()
+                                    val formList =  formDao.getAll()
+                                    ActivityCompat.requestPermissions(
+                                        this@MainActivity,
+                                        arrayOf<String>(READ_EXTERNAL_STORAGE), 0)
+                                    val folder =
+                                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                                    val file = File(folder, "data.csv")
+                                    csvWriter().writeAll(listOf(formList), file.outputStream())
+
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "CSV Saved",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                }
+                            }
+
+                            Box(modifier = Modifier
+                                .weight(1f)
+                                .padding(20.dp)
+                                .height(70.dp), contentAlignment = Alignment.CenterEnd) {
+                                ButtonComponent(
+                                    modifier = Modifier.fillMaxWidth(0.40f),
+                                    buttonText = "Sync to Cloud"
+                                ) {
+
+                                }
                             }
                         }
+
 
 
 
@@ -264,6 +311,25 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxWidth(),
                                 buttonText = "Save"
                             ) {
+                                if (buuildingName.value.isEmpty()) {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Name of Building is Required",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                else{
+                                    val form = Form(buildingName = buuildingName.value, address = address.value, owner = ownerFullname.value,
+                                        buildingStatus = status.value, ownersPhone = ownerPhone.value, ownersFullName = ownerFullname.value, buildingUses = uses.value)
+                                        val formDao = db.formDao()
+                                        formDao.insertAll(form)
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Saved Successfully",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                }
 
                             }
                         }
